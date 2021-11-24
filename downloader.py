@@ -1,6 +1,10 @@
 import os, sys
 import shutil
 from pathlib import Path
+import pandas as pd
+import urllib
+import configparser
+
 
 try:
     from bing import Bing
@@ -37,6 +41,65 @@ force_replace=False, timeout=60, verbose=True, filters=''):
     bing = Bing(query, limit, image_dir, adult, timeout, filters, verbose)
     bing.run()
 
+def str2bool(v):
+  return v.lower() in ("yes", "true", "t", "1")
+  
+def main():
+
+    config = configparser.RawConfigParser()
+    config.read('filters.cfg')
+
+    details_dict = dict(config.items('settings'))
+    # print(f"details_dict: ", details_dict)
+
+    task_filename = "task_list.xlsx"
+    df = pd.read_excel(task_filename)
+    # df.head()
+
+    for index, row in df.iterrows():
+        task_name = row["task_name"]
+        limit = row["image_download_count"]
+        height = row["minimum_height"]
+        width = row["minimum_width"]
+
+        print("=" * 30)
+        print(f"task_name: ", task_name)
+        print(f"limit: ", limit)
+        print(f"height: ", height)
+        print(f"width: ", width)
+        
+        # flag to store filters
+        filters = ""
+        ## if face only images to download
+        if "face_only" in details_dict:
+            if str2bool(details_dict["face_only"]):
+                filters = "filterui:face-face"
+
+        params = {
+            "query": task_name,
+        }
+
+        if limit:
+            params["limit"] = limit
+
+        if not pd.isna(height) and not pd.isna(width):
+            filters += f" filterui:imagesize-custom_{height}_{width}"
+        else:
+            if "imagesize" in details_dict:
+                if details_dict["imagesize"] == "wallpaper":
+                    filters += f" filterui:imagesize-wallpaper"
+
+        print(f"filters: ", filters)
+
+        # urllib.parse.quote_plus("filterui:face-face filterui:imagesize-custom_380_380")
+        filters_url_quoted = urllib.parse.quote_plus(filters)
+
+        params["filters"] = filters_url_quoted
+
+        ## call download
+        download(**params)
+
 
 if __name__ == '__main__':
-    download('dog', output_dir="..\\Users\\cat", limit=10, timeout=1)
+    main()
+    # download('dog', output_dir="..\\Users\\cat", limit=10, timeout=1)
