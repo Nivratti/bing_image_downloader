@@ -7,7 +7,6 @@ import re
 
 '''
 Python api to download image form Bing.
-Author: Guru Prasad (g.gaurav541@gmail.com)
 '''
 
 
@@ -78,6 +77,7 @@ class Bing:
             request_url = 'https://www.bing.com/images/async?q=' + urllib.parse.quote_plus(self.query) \
                           + '&first=' + str(self.page_counter) + '&count=' + str(self.limit) \
                           + '&adlt=' + self.adult + '&qft=' + ('' if self.filters is None else str(self.filters))
+                          
             request = urllib.request.Request(request_url, None, headers=self.headers)
             response = urllib.request.urlopen(request)
             html = response.read().decode('utf8')
@@ -97,5 +97,4 @@ class Bing:
         print("\n\n[%] Done. Downloaded {} images.".format(self.download_count))
         print("===============================================\n")
         print("Please show your support here")
-        print("https://www.buymeacoffee.com/gurugaurav")
         print("\n===============================================\n")
